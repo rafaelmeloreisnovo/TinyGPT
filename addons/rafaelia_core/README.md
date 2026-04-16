@@ -58,3 +58,13 @@ No CMake do repositório, o addon é opcional:
 - `-DTINYGPT_BUILD_RAFAELIA_ADDON=ON`
 
 Em arquiteturas não AArch64 o núcleo ASM é pulado automaticamente e o RMR Engine em C continua disponível.
+
+
+### Mapeamento matemático implantado (núcleo RMR)
+
+- Estado toroidal `s in [0,1)^7` e ciclo periódico `x_(n+42)=x_n`.
+- EMA com `alpha=0.25` para coerência/entropia.
+- `phi=(1-H)*C` em Q16.16.
+- Entropia operacional `H ~= U/256 + T/N` e versão milli `entropy_milli`.
+- Integridade por FNV-1a (`h=(h xor byte)*0x100000001B3`) + CRC32 incremental.
+- Agregação Merkle-lite (`rmr_merkle_root64`) para folhas 64-bit.
