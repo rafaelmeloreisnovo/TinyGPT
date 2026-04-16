@@ -1,0 +1,23 @@
+RAFAELIA ADDITIONAL NOTICE
+==========================
+
+Project: RafaelIA Core Addon
+Author: Instituto Rafael / ΔRafaelVerboΩ
+Scope: Applies to files under addons/rafaelia_core/
+
+This NOTICE records authorship attribution and operational intent for the
+RafaelIA addon as a separate, standalone component from TinyGPT core.
+
+Additional terms, policy constraints, or commercial conditions should be
+handled by a dedicated legal agreement compatible with the base license and
+local/international law.
+
+Compliance references tracked in this addon:
+- NIST AI RMF
+- NIST SP 800-53 (reference)
+- ISO/IEC 25010 (reference)
+- ISO/IEC 42001 (reference)
+- LGPD/GDPR (reference)
+- Copyright / Berne Convention principles
+
+No claim in this NOTICE overrides applicable law.
