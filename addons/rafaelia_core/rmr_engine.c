@@ -1,7 +1,6 @@
 #include "rmr_engine.h"
 
 #include <math.h>
-#include <string.h>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -21,6 +20,49 @@ static inline uint64_t rmr_rotl64(uint64_t x, uint32_t n) {
 
 static inline uint32_t rmr_q16_mul(uint32_t a_q16, uint32_t b_q16) {
     return (uint32_t)(((uint64_t)a_q16 * (uint64_t)b_q16) >> 16u);
+}
+
+static inline uint32_t rmr_rotl32_fast(uint32_t v, uint32_t n) {
+#if defined(__aarch64__)
+    uint32_t out;
+    if (n == 1u) {
+        __asm__ volatile("ror %w0, %w1, #31" : "=r"(out) : "r"(v));
+    } else if (n == 5u) {
+        __asm__ volatile("ror %w0, %w1, #27" : "=r"(out) : "r"(v));
+    } else {
+        out = rmr_rotl32(v, n);
+    }
+    return out;
+#elif defined(__x86_64__) || defined(__i386__)
+    uint32_t out = v;
+    if (n == 1u) {
+        __asm__ volatile("roll $1, %0" : "+r"(out));
+    } else if (n == 5u) {
+        __asm__ volatile("roll $5, %0" : "+r"(out));
+    } else {
+        out = rmr_rotl32(v, n);
+    }
+    return out;
+#else
+    return rmr_rotl32(v, n);
+#endif
+}
+
+static inline uint32_t rmr_mix_token_fast(uint32_t token, uint32_t rolling) {
+    uint32_t out = token ^ rolling;
+    return rmr_rotl32_fast(out, 1u);
+}
+
+const char* rmr_backend_name(void) {
+#if defined(__aarch64__)
+    return "aarch64-inline-asm";
+#elif defined(__x86_64__)
+    return "x86_64-inline-asm";
+#elif defined(__i386__)
+    return "x86-inline-asm";
+#else
+    return "portable-c";
+#endif
 }
 
 static void rmr_prepare_tables(void) {
@@ -221,7 +263,7 @@ size_t rmr_engine_run(rmr_engine_t* engine,
         const uint32_t pass = (uint32_t)(score >= threshold);
         const uint8_t mask = (uint8_t)(-(int32_t)pass);
 
-        const uint8_t mixed = (uint8_t)(rmr_rotl32(token, 1u) ^ (rolling & 0xFFu));
+        const uint8_t mixed = (uint8_t)(rmr_mix_token_fast(token, rolling) & 0xFFu);
         const uint8_t outv = (uint8_t)(mixed & mask);
 
         if ((pass != 0u) && (out_n < output_cap)) {
@@ -231,7 +273,7 @@ size_t rmr_engine_run(rmr_engine_t* engine,
         }
 
         rolling ^= phi_hash + 0x7F4A7C15u;
-        rolling = rmr_rotl32(rolling, 5u);
+        rolling = rmr_rotl32_fast(rolling, 5u);
 
         const uint32_t idx = (crc ^ outv) & 0xFFu;
         crc = (crc >> 8u) ^ rmr_crc_table[idx];
@@ -275,7 +317,9 @@ size_t rmr_engine_run(rmr_engine_t* engine,
         report->entropy_q16 = engine->entropy_q16;
         report->phi_q16 = engine->phi_q16;
         report->cycle_42 = engine->cycle_42;
-        memcpy(report->torus_u16, engine->torus_u16, sizeof(engine->torus_u16));
+        for (uint32_t k = 0; k < RMR_TORUS_DIM; ++k) {
+            report->torus_u16[k] = engine->torus_u16[k];
+        }
     }
 
     return out_n;

@@ -55,6 +55,7 @@ size_t rmr_engine_run(rmr_engine_t* engine,
                       uint8_t* output,
                       size_t output_cap,
                       rmr_report_t* report);
+const char* rmr_backend_name(void);
 
 /* utilitários de integridade e teoria de campos discreta */
 uint64_t rmr_merkle_root64(const uint64_t* leaves, size_t leaf_count);
