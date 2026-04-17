@@ -6,6 +6,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(THIRD_PARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../third_party)
 
+if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/googletest/CMakeLists.txt")
+    message(FATAL_ERROR
+            "Dependência de testes ausente em '${CMAKE_CURRENT_SOURCE_DIR}/googletest'.\\n"
+            "Execute: ./scripts/bootstrap_submodules.sh")
+endif ()
+
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 add_subdirectory(googletest)
 

@@ -50,12 +50,18 @@ if success, set the path in file [`./demo/demo_gpt.cpp`](https://github.com/keit
 const std::string MODEL_DIR = "path to model files (huggingface repo)";
 ```
 
-### 3. Build and Run
+### 3. Bootstrap dependencies
 
 ```bash
-mkdir build
-cmake -B ./build -DCMAKE_BUILD_TYPE=Release
-cmake --build ./build --config Release
+./scripts/bootstrap_submodules.sh
+```
+
+### 4. Build and Run
+
+```bash
+cmake -S . -B ./build -DCMAKE_BUILD_TYPE=Release
+cmake --build ./build --config Release --parallel
+ctest --test-dir ./build --output-on-failure
 ```
 
 This will generate the executable file and copy assets to directory `demo/bin`, then you can run the demo:
@@ -116,3 +122,12 @@ ids = enc.encode("This is a test")
 ## License
 
 This code is licensed under the MIT License (see [LICENSE](LICENSE)).
+
+
+## CI
+
+Este repositório possui workflow de CI em `.github/workflows/ci.yml` com:
+- checkout com submódulos recursivos
+- build em Release
+- execução de testes via `ctest`
+- empacotamento e upload de artefatos (demo e testes)

@@ -9,7 +9,28 @@ endif ()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+function(require_dependency_dir dir_path init_hint)
+    if (NOT EXISTS "${dir_path}/CMakeLists.txt")
+        message(FATAL_ERROR
+                "Dependência ausente em '${dir_path}'.\\n"
+                "Execute: ${init_hint}")
+    endif ()
+endfunction()
+
+require_dependency_dir(
+        "${THIRD_PARTY_DIR}/TinyTorch"
+        "./scripts/bootstrap_submodules.sh")
+require_dependency_dir(
+        "${THIRD_PARTY_DIR}/pcre2"
+        "./scripts/bootstrap_submodules.sh")
+require_dependency_dir(
+        "${THIRD_PARTY_DIR}/utf8proc"
+        "./scripts/bootstrap_submodules.sh")
+
 if (${TINYGPT_BUILD_PYBINDING})
+    require_dependency_dir(
+            "${THIRD_PARTY_DIR}/pybind11"
+            "./scripts/bootstrap_submodules.sh")
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
     set(BUILD_SHARED_LIBS OFF)
 endif ()
