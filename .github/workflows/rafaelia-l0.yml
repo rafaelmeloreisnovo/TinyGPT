@@ -1,0 +1,26 @@
+name: RAFAELIA L0 falsification
+
+on:
+  pull_request:
+    paths:
+      - 'addons/rafaelia_core/**'
+      - '.github/workflows/rafaelia-l0.yml'
+  push:
+    paths:
+      - 'addons/rafaelia_core/**'
+      - '.github/workflows/rafaelia-l0.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  host-cross:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          submodules: false
+      - name: Host adversarial properties, six-target no-runtime objects and ARM64 ASM
+        run: sh addons/rafaelia_core/l0/tests/verify.sh
