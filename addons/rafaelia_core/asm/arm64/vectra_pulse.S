@@ -141,7 +141,10 @@ vectra_pulse_collapse:
 // FNV-1a 64-bit no acc interno.
 // -----------------------------------------------------------------------------
 vectra_pulse_inject:
+    // NULL + nonzero len must fail closed. Zero-length is a no-op.
     cbz     w1, 2f
+    cbz     x0, 2f
+    mov     w8, w1              // AAPCS64 caller-saved original length
 
     adrp    x9, vectra_state
     add     x9, x9, :lo12:vectra_state
@@ -162,16 +165,16 @@ vectra_pulse_inject:
 
     str     x10, [x9, #OFF_ACC]
 
-    // phase = (phase + (len mod 42)) mod 42
-    // neste ponto w1=0; usar x0 original não disponível -> usar low acc para variar fase
+    // phase = (phase + (original_len mod 42)) mod 42.
+    // No data-derived surrogate: division uses bounded, original caller length.
     ldr     w13, [x9, #OFF_PHASE]
-    and     w14, w10, #0x1f
-    add     w13, w13, w14
-3:
-    cmp     w13, #PERIOD_42
-    b.lt    4f
-    sub     w13, w13, #PERIOD_42
-    b       3b
+    mov     w14, #PERIOD_42
+    udiv    w15, w8, w14
+    msub    w15, w15, w14, w8   // remainder in [0,41]
+    add     w13, w13, w15      // prior phase in [0,41], sum in [0,82]
+    cmp     w13, w14
+    b.lo    4f
+    sub     w13, w13, w14
 4:
     str     w13, [x9, #OFF_PHASE]
 2:

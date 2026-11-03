@@ -17,7 +17,9 @@ jobs:
           submodules: recursive
 
       - name: Configure (Release)
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        # CI runner is CPU-only; TinyTorch defaults CUDA/NCCL ON and requires nvcc.
+        # Keep GPU defaults unchanged for separately provisioned environments.
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DTINYTORCH_USE_CUDA=OFF -DTINYTORCH_USE_NCCL=OFF
 
       - name: Build
         run: cmake --build build --config Release --parallel
