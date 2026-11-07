@@ -1,0 +1,27 @@
+name: RAFAELIA L0 Q8 attention freestanding gate
+on:
+  pull_request:
+    paths:
+      - 'addons/rafaelia_core/l0/microinfer/**'
+      - 'addons/rafaelia_core/l0/decoder_q8/**'
+      - '.github/workflows/rafaelia-decoder-q8.yml'
+  push:
+    paths:
+      - 'addons/rafaelia_core/l0/microinfer/**'
+      - 'addons/rafaelia_core/l0/decoder_q8/**'
+      - '.github/workflows/rafaelia-decoder-q8.yml'
+permissions:
+  contents: read
+jobs:
+  q8-decode-scoped:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+          persist-credentials: false
+      - name: Preserve legacy matvec KAT and ISA checks
+        run: sh addons/rafaelia_core/l0/microinfer/tests/verify.sh
+      - name: Test attention, cross-ISA and bare-metal link-only
+        run: sh addons/rafaelia_core/l0/decoder_q8/tests/verify.sh
