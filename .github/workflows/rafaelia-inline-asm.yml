@@ -1,0 +1,28 @@
+name: RAFAELIA Ω TinyGPT L0 ARM inline Assembly ISA gates
+on:
+  pull_request:
+    paths:
+      - 'addons/rafaelia_core/l0/asm_inline/**'
+      - '.github/workflows/rafaelia-inline-asm.yml'
+  push:
+    paths:
+      - 'addons/rafaelia_core/l0/asm_inline/**'
+      - '.github/workflows/rafaelia-inline-asm.yml'
+permissions:
+  contents: read
+jobs:
+  inline-asm-scoped:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout producer code without inherited submodule builds
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+          persist-credentials: false
+      - name: Verify compiler, ISA, and static ELF (not device runtime)
+        run: sh addons/rafaelia_core/l0/asm_inline/tests/verify.sh
+      - name: Existing scalar Q8 nonregression KAT
+        run: sh addons/rafaelia_core/l0/microinfer/tests/verify.sh
+      - name: Existing Q8 attention host and linker gate
+        run: sh addons/rafaelia_core/l0/decoder_q8/tests/verify.sh
