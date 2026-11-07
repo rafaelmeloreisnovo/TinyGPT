@@ -47,7 +47,8 @@ for TARGET in armv7-none-eabi aarch64-none-elf; do
     if [ -n "$UNDEF" ]; then
         echo "ELF unresolved symbols for $TARGET" >&2; exit 1
     fi
-    if readelf -l "$T/$TARGET.elf" | grep -q INTERP; then
+    readelf -l "$T/$TARGET.elf" > "$T/program-headers.txt" || exit 1
+    if grep -q INTERP "$T/program-headers.txt"; then
         echo "Dynamic loader in $TARGET" >&2; exit 1
     fi
 done
