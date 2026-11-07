@@ -1,0 +1,23 @@
+name: RAFAELIA Q8 L0 freestanding falsifiers
+on:
+  pull_request:
+    paths:
+      - 'addons/rafaelia_core/l0/microinfer/**'
+      - '.github/workflows/rafaelia-microinfer.yml'
+  push:
+    paths:
+      - 'addons/rafaelia_core/l0/microinfer/**'
+      - '.github/workflows/rafaelia-microinfer.yml'
+permissions:
+  contents: read
+jobs:
+  scoped-kernel:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+          persist-credentials: false
+      - name: Build and falsify only the independent Q8 kernel
+        run: sh addons/rafaelia_core/l0/microinfer/tests/verify.sh
