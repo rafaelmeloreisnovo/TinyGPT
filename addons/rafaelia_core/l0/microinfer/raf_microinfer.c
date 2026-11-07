@@ -32,7 +32,7 @@ int raf_micro_q8_matvec(raf_acc32 *out, raf_count32 out_count,
     if (!rows || !cols || cols > 4096u) return RAF_MICRO_BAD_SHAPE;
     /* Check division BEFORE row*col or pointer arithmetic; no partial writes. */
     if (out_count < rows || input_count < cols ||
-        rows > weight_count / cols) return RAF_MICRO_BAD_CAPACITY;
+        ((unsigned long long)rows * (unsigned long long)cols > (unsigned long long)weight_count)) return RAF_MICRO_BAD_CAPACITY;
     for (r = 0u; r < rows; ++r) {
         raf_acc32 acc = 0;
         c = 0u;
