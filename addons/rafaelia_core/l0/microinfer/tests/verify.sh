@@ -11,8 +11,18 @@ for CC in cc clang; do
             -DRAF_MICRO_UNROLL4="$UNROLL" -I"$ROOT" \
             "$ROOT/raf_microinfer.c" "$ROOT/tests/test.c" -o "$TMP/$CC-$UNROLL"
         "$TMP/$CC-$UNROLL"
+        "$CC" -std=c11 -O2 -Wall -Wextra -Werror -pedantic -fno-builtin \
+            -DRAF_MICRO_UNROLL4="$UNROLL" -I"$ROOT" \
+            "$ROOT/raf_microinfer.c" "$ROOT/tests/test_preflight.c" \
+            -o "$TMP/$CC-$UNROLL-preflight"
+        "$TMP/$CC-$UNROLL-preflight"
     done
 done
+clang -std=c11 -O1 -g -Wall -Wextra -Werror -fno-builtin \
+    -fsanitize=address,undefined -fno-omit-frame-pointer \
+    -I"$ROOT" "$ROOT/raf_microinfer.c" "$ROOT/tests/test_preflight.c" \
+    -o "$TMP/asan-preflight"
+"$TMP/asan-preflight"
 command -v nm >/dev/null 2>&1 || exit 1
 for TARGET in x86_64-unknown-none i386-unknown-none armv7-none-eabi \
               aarch64-none-elf riscv32-unknown-elf riscv64-unknown-elf; do
@@ -35,4 +45,4 @@ for TARGET in armv7-none-eabi aarch64-none-elf; do
         exit 1
     fi
 done
-echo "PASS_SCOPED: C11 host parity/negatives + six ISA objects + ARMv7/AArch64 ASM codegen"
+echo "PASS_SCOPED: C11 KAT + 2k fuzz-deterministic vectors + span/alias negatives + ASan/UBSan + six ISA objects + ARMv7/AArch64 ASM codegen"
