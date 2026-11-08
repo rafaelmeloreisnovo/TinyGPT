@@ -30,15 +30,22 @@
    `abs(sum)≤4096×128²=67,108,864`, so signed 32-bit accumulation does not
    overflow. `rows×cols` is widened before the capacity comparison. Counts are
    in elements, not bytes; all required bounds are checked before any output.
-5. **No target runtime dependency.** No libc, libm, heap, malloc, syscalls,
+5. **Fail-closed span safety.** Both scalar and ASM backends now call
+   `../microinfer/raf_micro_preflight.h` before the first output write:
+   reject output/input or output/weight overlap, misaligned int32 output,
+   address-range wrap, missing capacity, null pointers or invalid shape.
+   Only the active read/write extents are checked. The caller still proves
+   allocation validity, region ownership, lifetime, data races and MMIO safety;
+   numeric pointer checks alone are not memory-safe capabilities.
+6. **No target runtime dependency.** No libc, libm, heap, malloc, syscalls,
    global writable state, C++ standard library, OS, broker or runtime imports.
    The compiler/linker are **build-time** tooling; physical boot still requires
    board-specific startup/stack/memory map and an authorized I/O adapter.
-6. **Observable proof gates.** Compile `A32`, `Thumb-2`, `AArch64` under
+7. **Observable proof gates.** Compile `A32`, `Thumb-2`, `AArch64` under
    `O0/O2/Os`, inspect decoded ISA with `llvm-objdump`, reject unresolved
    symbols via `nm -u`, and link synthetic ELFs with no PT_INTERP/DYNAMIC.
    A synthetic ELF without an OS is not proof it boots or runs on a board.
-7. **A/B regression path.** Keep the original scalar backend intact. Both
+8. **A/B regression path.** Keep the original scalar backend intact. Both
    backend objects export the same function; select one through the link DAG,
    run the existing scalar functional suite and independently execute the ASM
    version on real ARM hardware before asserting numerical parity.
@@ -80,5 +87,6 @@ performs this link for all three ARM build modes and rejects undefined imports.
 
 `SOURCE ≠ ARTIFACT ≠ EXECUTION ≠ EVIDENCE ≠ CLAIM`.
 Do not infer an entire freestanding TinyGPT from one inline ASM backend.
-Rollback: close the unmerged DRAFT PR or revert the isolated additive files;
+Rollback for merged PR #13 requires an independently reviewed successor revert;
+for the separate span-preflight hotfix PR, close the unmerged review or revert only its scoped diff;
 no upstream relicensing or destructive rewrite is required.
