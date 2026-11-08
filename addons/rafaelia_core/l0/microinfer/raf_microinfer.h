@@ -14,12 +14,16 @@ enum {
     RAF_MICRO_OK = 0,
     RAF_MICRO_BAD_POINTER = 1,
     RAF_MICRO_BAD_SHAPE = 2,
-    RAF_MICRO_BAD_CAPACITY = 3
+    RAF_MICRO_BAD_CAPACITY = 3,
+    RAF_MICRO_BAD_ALIAS = 4,
+    RAF_MICRO_BAD_ALIGNMENT = 5
 };
 /* Row-major W[rows][cols] * x[cols] -> out[rows], exact signed int32 sum.
  * max cols 4096 proves no accumulator overflow even at -128 * -128.
  * Counts are in elements, NOT bytes; validates ALL bounds before output writes.
- * Non-overlapping, properly aligned caller-owned buffers are required.
+ * The implementation rejects output overlap with input/weights, misaligned
+ * output and address interval wrap. Read-only input/weights may overlap.
+ * Caller still owns actual allocation sizes, lifetimes and concurrency safety.
  * No allocation, global writable state, I/O, syscalls or implicit platform API.
  */
 int raf_micro_q8_matvec(raf_acc32 *out, raf_count32 out_count,

@@ -4,6 +4,7 @@
  * ABI contract: ../microinfer/raf_microinfer.h. No libc or global state.
  */
 #include "../microinfer/raf_microinfer.h"
+#include "../microinfer/raf_micro_preflight.h"
 
 #if !defined(__GNUC__) && !defined(__clang__)
 #error "This inline assembly backend requires GNU-compatible compiler asm"
@@ -68,12 +69,10 @@ int raf_micro_q8_matvec(raf_acc32 *out, raf_count32 out_count,
                         raf_count32 rows, raf_count32 cols)
 {
     raf_count32 r, offset = 0u;
-    if (!out || !weights || !input) return RAF_MICRO_BAD_POINTER;
-    if (!rows || !cols || cols > 4096u) return RAF_MICRO_BAD_SHAPE;
-    /* Widen before multiplication: neither u32 divide nor wrap is required. */
-    if (out_count < rows || input_count < cols ||
-        (unsigned long long)rows * (unsigned long long)cols >
-        (unsigned long long)weight_count) return RAF_MICRO_BAD_CAPACITY;
+    /* Identical preflight to scalar kernel; no output writes on error. */
+    int status = raf_micro_q8_preflight(out, out_count, weights, weight_count,
+                                        input, input_count, rows, cols);
+    if (status != RAF_MICRO_OK) return status;
     for (r = 0u; r < rows; ++r) {
         out[r] = raf_dot_q8_a32_a64(weights + offset, input, cols);
         offset += cols;
