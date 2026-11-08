@@ -3,6 +3,7 @@
  * No C standard headers, libc, allocation or compiler runtime assumptions.
  */
 #include "raf_microinfer.h"
+#include "raf_micro_preflight.h"
 #ifndef RAF_MICRO_UNROLL4
 #define RAF_MICRO_UNROLL4 0
 #endif
@@ -28,11 +29,10 @@ int raf_micro_q8_matvec(raf_acc32 *out, raf_count32 out_count,
                         raf_count32 rows, raf_count32 cols)
 {
     raf_count32 r, c, offset = 0u;
-    if (!out || !weights || !input) return RAF_MICRO_BAD_POINTER;
-    if (!rows || !cols || cols > 4096u) return RAF_MICRO_BAD_SHAPE;
-    /* Check division BEFORE row*col or pointer arithmetic; no partial writes. */
-    if (out_count < rows || input_count < cols ||
-        ((unsigned long long)rows * (unsigned long long)cols > (unsigned long long)weight_count)) return RAF_MICRO_BAD_CAPACITY;
+    /* Shared fail-closed preflight; never writes output on rejection. */
+    int status = raf_micro_q8_preflight(out, out_count, weights, weight_count,
+                                        input, input_count, rows, cols);
+    if (status != RAF_MICRO_OK) return status;
     for (r = 0u; r < rows; ++r) {
         raf_acc32 acc = 0;
         c = 0u;
